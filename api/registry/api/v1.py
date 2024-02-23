@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 from urllib.parse import urljoin
 
 import api_logging as logging
@@ -780,7 +780,7 @@ def get_gtc_stake(request, address: str, round_id: int) -> GtcEventsResponse:
     summary="Retrieve an ETH activity score for an ethereum address",
     description="The endpoint provides a numeric integer score between 0 and 100 for any Ethereum address to assess the likelihood of human versus Sybil operation, available to integrators with a valid API key.",
 )
-def get_eth_activity_score(request, address: str) -> any:
+def get_eth_activity_score(request, address: str) -> Any:
     print(address, "address")
     lambda_client = boto3.client(
         "lambda",
@@ -792,11 +792,16 @@ def get_eth_activity_score(request, address: str) -> any:
     response = lambda_client.invoke(
         FunctionName="eth-stamp-api",
         InvocationType="RequestResponse",
-        # TODO: correct payload so request doesn't fail.
-        Payload=json.dumps({"address": address, "isBase64Encoded": False}),
+        Payload=json.dumps(
+            {
+                "body": '{"address":"0x96DB2c6D93A8a12089f7a6EdA5464e967308AdEd"}',
+                "isBase64Encoded": False,
+            }
+        ),
     )
 
     # TODO: parse correct response
     formatted_response = json.loads(response["Payload"].read().decode("utf-8"))
+    print("formatted_response", formatted_response)
 
     return {"score": 1}
